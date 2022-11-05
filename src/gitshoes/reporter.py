@@ -6,7 +6,7 @@ from datetime import datetime
 from github import Github
 from github import GithubException
 
-from gitshoes import __version__
+from gitshoes2 import __version__
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.version_option()
