@@ -15,10 +15,9 @@ from gitshoes import __version__
 @click.option('-t', '--token', help='GitHub OAuth token.', required=True)
 @click.option('-f', '--filename', default='issues.csv', help='Output (CSV) filename.')
 @click.option('-d', '--date', help='Retrieve only issues since the provided date (format: YYYY/MM/DD).')
-@click.option('-c', '--closed', is_flag=True, help='Retrieve closed issues instead of open issues.')
 
 # Main application loop
-def run(user, repository, token, filename, date, closed):
+def run(user, repository, token, filename, date):
     github = Github(token)
     try:
         repo = github.get_repo(user + '/' + repository)
@@ -27,41 +26,46 @@ def run(user, repository, token, filename, date, closed):
         print("GitHub returned the following error: '" + e.data.get('message') + "'. Check your username/repository/token and try again.")
         sys.exit(1)
 
-    if closed:
-        state = 'closed'
-    else:
-        state = 'open'
-
+    
+        
     if date:
         try:
             date = datetime.strptime(date, '%Y/%m/%d')
         except ValueError:
             print("Invalid date format provided, please make sure you're entering the date in the format 'YYYY/MM/DD'.")
             sys.exit(1)
-        issues = repo.get_issues(state=state, since=date)
+
+        # unneeded filter by state
+        issues = repo.get_issues(since=date)
     else:
-        issues = repo.get_issues(state=state)
+        # unneeded filter by state
+        issues = repo.get_issues()
 
     print('Retrieving ' + str(issues.totalCount) + ' issues from ' + user + '/' + repository + '...')
 
-    if closed:
-        tags = repo.get_tags()
-        sorted_tags = list()
-        for tag in tags:
-            sorted_tags.append((tag.name, datetime.strptime(tag.commit.stats.last_modified, '%a, %d %b %Y %H:%M:%S %Z')))
-        sorted_tags.sort(key=lambda x: x[1])
+    # shunsuke comment out
+    # if closed:
+    #     tags = repo.get_tags()
+    #     sorted_tags = list()
+    #     for tag in tags:
+    #         sorted_tags.append((tag.name, datetime.strptime(tag.commit.stats.last_modified, '%a, %d %b %Y %H:%M:%S %Z')))
+    #     sorted_tags.sort(key=lambda x: x[1])
 
     with open(filename, 'w') as write_report:
         writer = csv.writer(write_report)
-        if closed:
-            writer.writerow(['Number', 'Created At', 'Updated At', 'Closed At', 'Title', 'Description', 'Labels', 'Tag', 'Assignees'])
-        else:
-            writer.writerow(['Number', 'Created At', 'Updated At', 'Title', 'Description', 'Labels', 'Assignees'])
+        # shunsuke comment out
+        # if closed:
+        #     writer.writerow(['Number', 'Created At', 'Updated At', 'Closed At', 'Title', 'Description', 'Labels', 'Tag', 'Assignees'])
+        # else:
+        #     writer.writerow(['Number', 'Created At', 'Updated At', 'Title', 'Description', 'Labels', 'Assignees'])
+        writer.writerow(['Number', 'Milestoe', 'Created At', 'Updated At', 'Title', 'Description', 'Labels', 'Assignees'])
         for issue in issues:
-            if closed:
-                writer.writerow([issue.number, issue.created_at, issue.updated_at, issue.closed_at, issue.title, issue.body, get_nested_items(issue.labels, 'labels'), get_issue_tag(issue, sorted_tags), get_nested_items(issue.assignees, 'assignees')])
-            else:
-                writer.writerow([issue.number, issue.created_at, issue.updated_at, issue.title, issue.body, get_nested_items(issue.labels, 'labels'), get_nested_items(issue.assignees, 'assignees')])
+            # shunsuke comment out
+            # if closed:
+            #     writer.writerow([issue.number, issue.created_at, issue.updated_at, issue.closed_at, issue.title, issue.body, get_nested_items(issue.labels, 'labels'), get_issue_tag(issue, sorted_tags), get_nested_items(issue.assignees, 'assignees')])
+            # else:
+            #     writer.writerow([issue.number, issue.created_at, issue.updated_at, issue.title, issue.body, get_nested_items(issue.labels, 'labels'), get_nested_items(issue.assignees, 'assignees')])
+            writer.writerow([issue.number, issue.created_at, issue.updated_at, issue.title, issue.body, get_nested_items(issue.labels, 'labels'), get_nested_items(issue.assignees, 'assignees')])
     write_report.close()
 
     print(str(issues.totalCount) + ' issues written to ' + filename)
